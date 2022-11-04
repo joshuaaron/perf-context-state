@@ -1,19 +1,25 @@
-import React, {
+import {
     useRef,
     createContext,
     useContext,
     // useSyncExternalStore,
     useState,
     useEffect,
+    ReactNode,
 } from 'react';
 
 type SetInternal<T> = {
     (partial: T | Partial<T> | ((state: T) => T | Partial<T>)): void;
 };
 
-export function createStore<State>(initialState: State) {
+type ProviderProps<T> = {
+    initialState?: T;
+    children: ReactNode;
+};
+
+export function createStore<State>(initialState?: State) {
     function useStoreData() {
-        const state = useRef<State>(initialState);
+        const state = useRef<State>(initialState ?? ({} as State));
         const subscribers = useRef(new Set<(state: State) => void>());
 
         const get = () => state.current;
@@ -47,8 +53,13 @@ export function createStore<State>(initialState: State) {
 
     const StoreContext = createContext<ReturnType<typeof useStoreData> | null>(null);
 
-    function Provider({ children }: { children: React.ReactNode }) {
-        return <StoreContext.Provider value={useStoreData()}>{children}</StoreContext.Provider>;
+    function Provider({ initialState, children }: ProviderProps<State>) {
+        const store = useStoreData();
+        if (initialState) {
+            store.set(initialState);
+        }
+
+        return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
     }
 
     function useStore(): [State, SetInternal<State>];
@@ -79,7 +90,7 @@ export function createStore<State>(initialState: State) {
 }
 
 /**
- * Problem 1: Add support to initialize store with props (through the provider)
- * Problem 2: Add option to not pass a selector and receive the whole store
+ * Problem 1: Add support to initialize store with props (through the provider) ✅
+ * Problem 2: Add option to not pass a selector and receive the whole store ✅
  * Problem 3: Add support for equality fn checks for non primitive values?
  */

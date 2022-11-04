@@ -1,30 +1,79 @@
-import { useState } from 'react';
-import reactLogo from './assets/react.svg';
+import { useEffect, useState } from 'react';
 import './App.css';
 
-function App() {
-    const [count, setCount] = useState(0);
+import { createStore } from './create-store';
 
+type State = { first: string; last?: string };
+
+const { Provider, useStore } = createStore<State>({ first: 'John', last: 'Wick' });
+
+const TextInput = ({ value }: { value: 'first' | 'last' }) => {
+    const [fieldVal, setState] = useStore((state) => state[value]);
     return (
-        <div className='App'>
-            <div>
-                <a href='https://vitejs.dev' target='_blank'>
-                    <img src='/vite.svg' className='logo' alt='Vite logo' />
-                </a>
-                <a href='https://reactjs.org' target='_blank'>
-                    <img src={reactLogo} className='logo react' alt='React logo' />
-                </a>
-            </div>
-            <h1>Vite + React</h1>
-            <div className='card'>
-                <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-                <p>
-                    Edit <code>src/App.tsx</code> and save to test HMR
-                </p>
-            </div>
-            <p className='read-the-docs'>Click on the Vite and React logos to learn more</p>
+        <div className='container field'>
+            {value}:{' '}
+            <input value={fieldVal} onChange={(e) => setState((state) => ({ ...state, [value]: e.target.value }))} />
         </div>
     );
-}
+};
 
-export default App;
+const Display = ({ value }: { value: 'first' | 'last' }) => {
+    const [data] = useStore((state) => state[value]);
+    return (
+        <div className='container value'>
+            {value}: {data}
+        </div>
+    );
+};
+
+const FormContainer = () => {
+    return (
+        <div className='container'>
+            <h5>FormContainer</h5>
+            <TextInput value='first' />
+            <TextInput value='last' />
+        </div>
+    );
+};
+
+const DisplayContainer = () => {
+    return (
+        <div className='container'>
+            <h5>DisplayContainer</h5>
+            <Display value='first' />
+            <Display value='last' />
+        </div>
+    );
+};
+
+const ContentContainer = () => {
+    return (
+        <div className='content-container container'>
+            <h5>ContentContainer</h5>
+            <FormContainer />
+        </div>
+    );
+};
+
+const Sidebar = () => {
+    return (
+        <div className='sidebar container'>
+            <h5>Sidebar</h5>
+            <DisplayContainer />
+        </div>
+    );
+};
+
+export default function App() {
+    return (
+        <Provider initialState={{ first: 'Dave' }}>
+            <div className='wrapper container'>
+                <h5>App</h5>
+                <div className='app-container'>
+                    <ContentContainer />
+                    <Sidebar />
+                </div>
+            </div>
+        </Provider>
+    );
+}
